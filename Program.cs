@@ -1,40 +1,4 @@
 ﻿using System;
-
-namespace PERF_COUNTERS_CSHARP
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World!");
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -48,11 +12,11 @@ using Microsoft.Office.Interop.Excel;
 using System.Text.RegularExpressions;
 
 
-namespace PerfCounters
+namespace PERF_COUNTERS_CSHARP
 {
 	class double_Point
 	{
-		public Single value {get; set;}
+		public float value {get; set;}//System.Single = float в C#
 		public DateTime time {get; set;}
 	}
 	
@@ -60,16 +24,12 @@ namespace PerfCounters
 	{
 		public static void ReadDataToConsole (string dbFileName, string CommandText)
 		{
-			SQLiteConnection m_dbConn;
-			SQLiteCommand m_sqlCmd;
-			
-			m_sqlCmd = new SQLiteCommand();
-
-			m_dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
+			var m_dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
 			m_dbConn.Open();
+            var m_sqlCmd = new SQLiteCommand();
 			m_sqlCmd.Connection = m_dbConn;
 			
-			DataSet ds = new DataSet();
+			var ds = new DataSet();
 		   	m_sqlCmd.CommandText = @CommandText;
 		   	m_sqlCmd.ExecuteNonQuery();
 		   	SQLiteDataAdapter adapter = new SQLiteDataAdapter(m_sqlCmd.CommandText, m_dbConn);
@@ -95,17 +55,14 @@ namespace PerfCounters
 		
 		public static void CreateAndCheckSQLiteDB (string dbFileName)
 		{
-			System.Data.SQLite.SQLiteConnection SQLiteConn;
-			System.Data.SQLite.SQLiteCommand SQLiteCmd;
-			
-			SQLiteCmd = new System.Data.SQLite.SQLiteCommand();
+			var SQLiteCmd = new System.Data.SQLite.SQLiteCommand();
 						
 			if (!System.IO.File.Exists(dbFileName))
 			{
 				System.Data.SQLite.SQLiteConnection.CreateFile(dbFileName);
 			}
 			
-			SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
+			var SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
 			SQLiteConn.Open();
 			SQLiteCmd.Connection = SQLiteConn;
 			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Counters(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_name TEXT, instance_name TEXT, value TEXT, category TEXT);";
@@ -120,9 +77,9 @@ namespace PerfCounters
 		}
 	
 	
-		public static void Main078(string[] args)
+		public static void Main(string[] args)
 		{
-			
+			CreateAndCheckSQLiteDB("1.sqlite")
 		}
 	}
 }
