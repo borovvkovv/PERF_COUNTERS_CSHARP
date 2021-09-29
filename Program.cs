@@ -48,8 +48,7 @@ namespace PERF_COUNTERS_CSHARP
 		   		}
 		   	}
 		}
-		
-		
+				
 		public static void CreateAndCheckSQLiteDB (string dbFileName)
 		{			
 			if (!System.IO.File.Exists(dbFileName))
@@ -70,8 +69,7 @@ namespace PERF_COUNTERS_CSHARP
 				SQLiteCmd.ExecuteNonQuery();
 			}
 		}
-	
-	
+		
 		public static void Main(string[] args)
 		{
 			CreateAndCheckSQLiteDB("1.sqlite")
