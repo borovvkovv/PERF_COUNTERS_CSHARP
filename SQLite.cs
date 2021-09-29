@@ -8,7 +8,7 @@ using System.IO;
 using System.Data.SQLite;
 using System.Data.SqlClient;
 using System.Data.Common;
-using Microsoft.Office.Interop.Excel;
+//using Microsoft.Office.Interop.Excel;
 using System.Text.RegularExpressions;
 
 namespace PerfCounters3

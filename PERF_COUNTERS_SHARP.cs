@@ -5,12 +5,12 @@ using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.PerformanceData;
 using System.Threading;
+using System.Data.SQLite;
 using System.Linq;
 using System.IO;
-using System.Data.SQLite;
 using System.Data.SqlClient;
 using System.Data.Common;
-using Microsoft.Office.Interop.Excel;
+//using Microsoft.Office.Interop.Excel;
 using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
 
@@ -141,6 +141,7 @@ namespace PERF_COUNTERS_SHARP
 							{
 								using (var TransactionFirst = SQLiteConn.BeginTransaction())
 								{
+									
 									using (var SQLiteCmd = new System.Data.SQLite.SQLiteCommand(@"INSERT INTO Workflow (date,value) VALUES (?,?)",SQLiteConn))
 									{
 										SQLiteCmd.Parameters.Add("@date", DbType.String);
@@ -250,13 +251,13 @@ namespace PERF_COUNTERS_SHARP
 		/*public static void ConsumerForStatAnalit()
 		{
 			#region Запись строк в БД SQLite
-			using (System.Data.SQLite.SQLiteConnection SQLiteConn = new SQLiteConnection("Data Source=" + "Sample.sqlite" + ";Version=3;")) {
+			using (SQLiteConnection SQLiteConn = new SQLiteConnection("Data Source=" + "Sample.sqlite" + ";Version=3;")) {
 				SQLiteConn.Open();
 				while (!BCBrief.IsCompleted) {
 					List<ColumnsBrief> Columns = new List<ColumnsBrief>();
 					if (BCBrief.TryTake(out Columns)) {
-						using (System.Data.SQLite.SQLiteTransaction TransactionFirst = SQLiteConn.BeginTransaction()) {
-							using (System.Data.SQLite.SQLiteCommand SQLiteCmd = new SQLiteCommand(SQLiteConn)) {
+						using (SQLiteTransaction TransactionFirst = SQLiteConn.BeginTransaction()) {
+							using (SQLiteCommand SQLiteCmd = new SQLiteCommand(SQLiteConn)) {
 								SQLiteCmd.CommandText = @"INSERT INTO StatAnalit (datetime, server, counter_type, diff) VALUES (?,?,?,?)";//добавляем новую строку в таблицу Correl (server, counter_name, instance_name,correl)
 								SQLiteCmd.Parameters.Add("@datetime", DbType.String);
 								SQLiteCmd.Parameters.Add("@server", DbType.String);
@@ -515,15 +516,15 @@ namespace PERF_COUNTERS_SHARP
 		public static void CorrelProcessing(string dbFileName)
 		{
 			#region Выборка всех записей Workflow и помещение их в DataSet (DS id, date, value)
-			using (var SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
-			{
+			var SQLiteConn = new SQLiteConnection();
+			SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
 				SQLiteConn.Open();
-				var SQLiteCmd = new SQLiteCommand(@"SELECT * FROM Workflow",SQLiteConn);
+				var SQLiteCmd = new System.Data.SQLite.SQLiteCommand(@"SELECT * FROM Workflow",SQLiteConn);
 				SQLiteCmd.ExecuteNonQuery();
 				DataSet DS = new DataSet();
 				SQLiteDataAdapter adapter = new SQLiteDataAdapter(SQLiteCmd.CommandText, SQLiteConn);
 				adapter.Fill(DS);
-			}
+				SQLiteConn.Close();
 			#endregion
 			
 			var ListForCorrel = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, Values>>>>();
@@ -606,7 +607,7 @@ namespace PERF_COUNTERS_SHARP
 							SQLiteCmd.Parameters.Add("@instance_name", DbType.String);
 							SQLiteCmd.Parameters.Add("@correl", DbType.String);
 							
-							System.Data.SQLite.SQLiteTransaction TransactionFirst = SQLiteConn.BeginTransaction();
+							SQLiteTransaction TransactionFirst = SQLiteConn.BeginTransaction();
 							SQLiteCmd.Parameters["@server"].Value = item;
 							SQLiteCmd.Parameters["@provider"].Value = item2;
 							SQLiteCmd.Parameters["@counter_name"].Value = item3;
@@ -793,13 +794,13 @@ namespace PERF_COUNTERS_SHARP
 		public static void CreateAndCheckSQLiteDB(string dbFileName)
 		{
 			if (!System.IO.File.Exists(dbFileName)) {
-				System.Data.SQLite.SQLiteConnection.CreateFile(dbFileName);
+				SQLiteConnection.CreateFile(dbFileName);
 			}
 			
-			using (var SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
+			using (var SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
 			{
 				SQLiteConn.Open();
-				var SQLiteCmd = new System.Data.SQLite.SQLiteCommand("CREATE TABLE IF NOT EXISTS StatAnalit(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_type TEXT, diff TEXT);",SQLiteConn);
+				var SQLiteCmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS StatAnalit(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_type TEXT, diff TEXT);",SQLiteConn);
 				SQLiteCmd.ExecuteNonQuery();
 				
 				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Counters(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, identifier INTEGER, value TEXT);";
@@ -997,7 +998,7 @@ namespace PERF_COUNTERS_SHARP
 			#endregion
 		}
 		
-		public static void Main(string[] args)
+		public static void Main4(string[] args)
 		{
 			BC = new BlockingCollection<List<Columns>>();
 			
