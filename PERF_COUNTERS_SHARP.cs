@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
 
 
-namespace PerfCounters2
+namespace PERF_COUNTERS_SHARP
 {
 	
 	class Values
@@ -130,22 +130,24 @@ namespace PerfCounters2
 		
 		public static void Consumer()
 		{
-			using (System.Data.SQLite.SQLiteConnection SQLiteConn = new SQLiteConnection("Data Source=" + "Sample.sqlite" + ";Version=3;")) {
+			using (var SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=Sample.sqlite;Version=3;")) {
 				SQLiteConn.Open();
 				while (!BC.IsCompleted) {
-					List<Columns> Columns = new List<Columns>();
+					var Columns = new List<Columns>();
 					if (BC.TryTake(out Columns)) {
 						foreach (var col in Columns)
 						{
 							if (col.category == "Workflow")
 							{
-								using (System.Data.SQLite.SQLiteTransaction TransactionFirst = SQLiteConn.BeginTransaction()) {
-									using (System.Data.SQLite.SQLiteCommand SQLiteCmd = new SQLiteCommand(SQLiteConn)) {
-										SQLiteCmd.CommandText = @"INSERT INTO Workflow (date,value) VALUES (?,?)";
+								using (var TransactionFirst = SQLiteConn.BeginTransaction())
+								{
+									using (var SQLiteCmd = new System.Data.SQLite.SQLiteCommand(@"INSERT INTO Workflow (date,value) VALUES (?,?)",SQLiteConn))
+									{
 										SQLiteCmd.Parameters.Add("@date", DbType.String);
 										SQLiteCmd.Parameters.Add("@value", DbType.String);
 										
-										foreach (var col2 in Columns) {
+										foreach (var col2 in Columns)
+										{
 											SQLiteCmd.Parameters["@date"].Value = col2.datetime;
 											SQLiteCmd.Parameters["@value"].Value = col2.value;
 											SQLiteCmd.ExecuteNonQuery();
@@ -156,19 +158,19 @@ namespace PerfCounters2
 							}
 							else
 							{
-								using (System.Data.SQLite.SQLiteTransaction TransactionFirst = SQLiteConn.BeginTransaction())
+								using (var TransactionFirst = SQLiteConn.BeginTransaction())
 								{
-									using (System.Data.SQLite.SQLiteCommand SQLiteCmd = new SQLiteCommand(SQLiteConn))
+									using (var SQLiteCmd = new System.Data.SQLite.SQLiteCommand(SQLiteConn))
 									{
 										
 										foreach (var col3 in Columns)
 										{
-											DataSet DS = new DataSet();
+											var DS = new DataSet();
 											SQLiteCmd.Parameters.Clear();
 											SQLiteCmd.CommandText = @"SELECT * FROM CounterIdentifier WHERE server='"+col3.server+"' AND provider='"+col3.category+"' AND counter_name='"+
 											col3.counter_name+"' AND instance_name='"+col3.instance_name+"'";
 											SQLiteCmd.ExecuteNonQuery();
-											SQLiteDataAdapter adapter = new SQLiteDataAdapter(SQLiteCmd.CommandText, SQLiteConn);
+											var adapter = new SQLiteDataAdapter(SQLiteCmd.CommandText, SQLiteConn);
 											adapter.Fill(DS);
 											UInt32 identifier = 0;
 											
@@ -201,7 +203,7 @@ namespace PerfCounters2
 												adapter.Fill(DS);
 												try
 												{
-												identifier = Convert.ToUInt32(DS.Tables[0].Rows[0].ItemArray[0].ToString());
+													identifier = Convert.ToUInt32(DS.Tables[0].Rows[0].ItemArray[0].ToString());
 												}
 												catch (Exception e)
 												{
@@ -279,7 +281,7 @@ namespace PerfCounters2
 		
 		public static string GetCellValueFromDS(DataSet DS, string counter_name, string instance_name)
 		{
-			foreach (DataRow row in DS.Tables[0].Rows) {
+			foreach (var row in DS.Tables[0].Rows) {
 				var cells = row.ItemArray;
 				//Console.WriteLine("Значение в DS: "+" "+cells[0].ToString().ToLower().Trim()+" ");
 				if (cells[0].ToString().ToLower().Trim() == counter_name && cells[1].ToString().ToLower().Trim() == instance_name) {
@@ -293,8 +295,8 @@ namespace PerfCounters2
 		
 		public static string Processing_537003264(string counter_name, string instance_name, DataSet DSFirst)
 		{
-			Int64 A1 = 0;
-			Int64 B1 = 0;
+			long A1 = 0;//long представлен системным типом System.Int64
+			long B1 = 0;
 			
 			var Formatted_counter_name = counter_name.ToLower().Trim();
 			var Formatted_instance_name = instance_name.ToLower().Trim();
@@ -353,8 +355,8 @@ namespace PerfCounters2
 			#endregion
 			
 			//Console.Write(Formatted_counter_name+" "+Formatted_instance_name+" ");
-			Int64 Divisible = A1;
-			Int64 Divider = B1;
+			long Divisible = A1;
+			long Divider = B1;
 			if (Divider != 0) {
 				//Console.WriteLine(100*Divisible/Divider);
 				return (100 * Divisible / Divider).ToString();
@@ -366,10 +368,10 @@ namespace PerfCounters2
 		
 		public static string Processing_1073874176(string counter_name, string instance_name, DataSet DSFirst, DataSet DSSecond)
 		{
-			Int64 A1 = 0;
-			Int64 A2 = 0;
-			Int64 B1 = 0;
-			Int64 B2 = 0;
+			long A1 = 0;
+			long A2 = 0;
+			long B1 = 0;
+			long B2 = 0;
 			
 			var Formatted_counter_name = counter_name.ToLower().Trim();
 			var Formatted_instance_name = instance_name.ToLower().Trim();
@@ -448,8 +450,8 @@ namespace PerfCounters2
 			#endregion
 			
 			//Console.Write(Formatted_counter_name+" "+Formatted_instance_name+" ");
-			Int64 Divisible = A2 - A1;
-			Int64 Divider = B2 - B1;
+			long Divisible = A2 - A1;
+			long Divider = B2 - B1;
 			if (Divider != 0) {
 				//Console.WriteLine(Divisible/Divider);
 				return (Divisible / Divider).ToString();
@@ -461,8 +463,8 @@ namespace PerfCounters2
 		
 		public static string Processing_272696576(string counter_name, string instance_name, DataSet DSFirst, DataSet DSSecond, DateTime StartDateTimeFirst, DateTime StartDateTimeSecond)
 		{
-			Int64 A1 = 0;
-			Int64 A2 = 0;
+			long A1 = 0;
+			long A2 = 0;
 			DateTime T1 = StartDateTimeFirst;
 			DateTime T2 = StartDateTimeSecond;
 			
@@ -486,7 +488,7 @@ namespace PerfCounters2
 			}
 			
 			//Console.Write(Formatted_counter_name+" "+Formatted_instance_name+" ");
-			Int64 Divisible = A2 - A1;
+			long Divisible = A2 - A1;
 			double Divider = (T2 - T1).TotalSeconds;
 			if (Divider != 0) {
 				//Console.WriteLine(Divisible/Divider);
@@ -499,48 +501,42 @@ namespace PerfCounters2
 
 		public static void DeleteRows(string dbFileName)
 		{
-			SQLiteCommand SQLiteCmd;
-			SQLiteConnection SQLiteConn;
-			SQLiteCmd = new SQLiteCommand();
-			SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
-			SQLiteConn.Open();
-			SQLiteCmd.Connection = SQLiteConn;
-			SQLiteCmd.CommandText = @"DELETE FROM Counters";
-			SQLiteCmd.ExecuteNonQuery();
-			SQLiteCmd.CommandText = @"DELETE FROM Workflow";
-			SQLiteCmd.ExecuteNonQuery();
-			SQLiteConn.Close();
+			
+			using (var SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
+			{
+				SQLiteConn.Open();
+				var SQLiteCmd = new SQLiteCommand(@"DELETE FROM Counters",SQLiteConn);
+				SQLiteCmd.ExecuteNonQuery();
+				SQLiteCmd.CommandText = @"DELETE FROM Workflow";
+				SQLiteCmd.ExecuteNonQuery();
+			}
 		}
 		
 		public static void CorrelProcessing(string dbFileName)
 		{
 			#region Выборка всех записей Workflow и помещение их в DataSet (DS id, date, value)
-			SQLiteConnection SQLiteConn;
-			SQLiteCommand SQLiteCmd;
-			SQLiteCmd = new SQLiteCommand();
-			SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
-			SQLiteConn.Open();
-			SQLiteCmd.Connection = SQLiteConn;
-			
-			DataSet DS = new DataSet();
-			SQLiteCmd.CommandText = @"SELECT * FROM Workflow";
-			SQLiteCmd.ExecuteNonQuery();
-			SQLiteDataAdapter adapter = new SQLiteDataAdapter(SQLiteCmd.CommandText, SQLiteConn);
-			adapter.Fill(DS);
-			SQLiteConn.Close();
+			using (var SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
+			{
+				SQLiteConn.Open();
+				var SQLiteCmd = new SQLiteCommand(@"SELECT * FROM Workflow",SQLiteConn);
+				SQLiteCmd.ExecuteNonQuery();
+				DataSet DS = new DataSet();
+				SQLiteDataAdapter adapter = new SQLiteDataAdapter(SQLiteCmd.CommandText, SQLiteConn);
+				adapter.Fill(DS);
+			}
 			#endregion
 			
 			var ListForCorrel = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, Values>>>>();
 			
-			foreach (DataRow row in DS.Tables[0].Rows)
+			foreach (var row in DS.Tables[0].Rows)
 			{
 				var cells = row.ItemArray;
-				double WFValue = Convert.ToDouble(cells[2]);
-				DateTime StartDateTime = Convert.ToDateTime(cells[1]);
+				var WFValue = Convert.ToDouble(cells[2]);
+				var StartDateTime = Convert.ToDateTime(cells[1]);
 				
 				#region Выборка всех счетчиков из SQLite, входящий в допустимое время StartDateTime - EndDateTime, и помещение их в DataSet (DS2 ID, datetime, server, counter_name, instance_name, value, category)
 				SQLiteConn.Open();
-				DataSet DS2 = new DataSet();
+				var DS2 = new DataSet();
 				SQLiteCmd.CommandText = @"SELECT * FROM Counters WHERE datetime>='" + StartDateTime.AddSeconds(-30) + "' AND datetime<='" + StartDateTime.AddSeconds(30) + "'";
 				SQLiteCmd.ExecuteNonQuery();
 				SQLiteDataAdapter adapter2 = new SQLiteDataAdapter(SQLiteCmd.CommandText, SQLiteConn);
@@ -549,9 +545,9 @@ namespace PerfCounters2
 				#endregion
 				
 				#region Запись листа ListForCorrel из DS2 для последующей корреляции и записи в SQLite
-				foreach (DataRow row2 in DS2.Tables[0].Rows) {
+				foreach (var row2 in DS2.Tables[0].Rows) {
 					var cells2 = row2.ItemArray;
-					string ServerName = cells2[2].ToString().ToLower();
+					var ServerName = cells2[2].ToString().ToLower();
 					if (!ListForCorrel.ContainsKey(ServerName)) {
 						ListForCorrel[ServerName] = new Dictionary<string, Dictionary<string, Dictionary<string, Values>>>();
 					}
@@ -687,12 +683,12 @@ namespace PerfCounters2
 			#region Выборка всех записей Workflow,Counters и помещение их в List
 			SQLiteConnection SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
 			SQLiteConn.Open();
-			SQLiteCommand SQLiteCmd = new SQLiteCommand(SQLiteConn);
+			var SQLiteCmd = new SQLiteCommand(SQLiteConn);
 			
 			DSWF = new DataSet();
 			SQLiteCmd.CommandText = @"SELECT * FROM Workflow";
 			SQLiteCmd.ExecuteNonQuery();
-			SQLiteDataAdapter adapterWF = new SQLiteDataAdapter(SQLiteCmd.CommandText, SQLiteConn);
+			var adapterWF = new SQLiteDataAdapter(SQLiteCmd.CommandText, SQLiteConn);
 			adapterWF.Fill(DSWF);
 			#endregion
 			
@@ -771,25 +767,23 @@ namespace PerfCounters2
 			System.DateTime StartDateTime;
 			
 			#region Выборка WF из SQL и помещение в DataSet (DS)
-			System.Data.SqlClient.SqlConnection SQLConn;
-			System.Data.SqlClient.SqlCommand SQLCmd;
-			SQLCmd = new System.Data.SqlClient.SqlCommand();
-			SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source=" + Server + ";Initial Catalog=" + DB + ";Integrated Security=SSPI;");
-			SQLConn.Open();
-			SQLCmd.Connection = SQLConn;
-			SQLCmd.CommandText = @"SELECT COUNT(TaskID) FROM [DIRECTUM].[dbo].[SBWorkflowProcessing] with(nolock)";
 			
-			StartDateTime = DateTime.Now;
-			SQLCmd.ExecuteNonQuery();
-			
-			System.Data.DataSet DS = new DataSet();
-			System.Data.SqlClient.SqlDataAdapter Adapter = new System.Data.SqlClient.SqlDataAdapter(SQLCmd.CommandText, SQLConn);
-			Adapter.Fill(DS);
-			SQLConn.Close();
+			using (var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source=" + Server + ";Initial Catalog=" + DB + ";Integrated Security=SSPI;"))
+			{
+				SQLConn.Open();
+				var SQLCmd = new System.Data.SqlClient.SqlCommand(@"SELECT COUNT(TaskID) FROM [DIRECTUM].[dbo].[SBWorkflowProcessing] with(nolock)",SQLConn);
+				
+				StartDateTime = DateTime.Now;
+				SQLCmd.ExecuteNonQuery();
+				
+				var DS = new DataSet();
+				var Adapter = new System.Data.SqlClient.SqlDataAdapter(SQLCmd.CommandText, SQLConn);
+				Adapter.Fill(DS);
+			}
 			#endregion
 			
 			#region Помещение счетчиков в Pipeline
-			List<Columns> Columns = new List<Columns>();
+			var Columns = new List<Columns>();
 			Columns.Add(new Columns(StartDateTime, "", "Workflow", "", Convert.ToSingle(DS.Tables[0].Rows[0].ItemArray[0]), ""));
 			BC.Add(Columns);
 			#endregion
@@ -798,55 +792,47 @@ namespace PerfCounters2
 		
 		public static void CreateAndCheckSQLiteDB(string dbFileName)
 		{
-			System.Data.SQLite.SQLiteConnection SQLiteConn;
-			System.Data.SQLite.SQLiteCommand SQLiteCmd;
-			
-			SQLiteCmd = new System.Data.SQLite.SQLiteCommand();
-			
 			if (!System.IO.File.Exists(dbFileName)) {
 				System.Data.SQLite.SQLiteConnection.CreateFile(dbFileName);
 			}
 			
-			SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
-			SQLiteConn.Open();
-			SQLiteCmd.Connection = SQLiteConn;
-			
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS StatAnalit(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_type TEXT, diff TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Counters(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, identifier INTEGER, value TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Workflow(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, value TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Correl(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, provider TEXT, counter_name TEXT, instance_name TEXT, Correl TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS CounterIdentifier(id INTEGER PRIMARY KEY AUTOINCREMENT, server TEXT, provider TEXT, counter_name TEXT, instance_name TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			
-			/*SQLiteCmd.CommandText = "CREATE INDEX IF NOT EXISTS index1 ON CounterIdentifier(server, provider, counter_name, instance_name);";
-			SQLiteCmd.ExecuteNonQuery();
-			
-			SQLiteCmd.CommandText = "CREATE INDEX IF NOT EXISTS index2 ON Counters(datetime, identifier, value);";
-			SQLiteCmd.ExecuteNonQuery();*/
-			
-			SQLiteConn.Close();
+			using (var SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
+			{
+				SQLiteConn.Open();
+				var SQLiteCmd = new System.Data.SQLite.SQLiteCommand("CREATE TABLE IF NOT EXISTS StatAnalit(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_type TEXT, diff TEXT);",SQLiteConn);
+				SQLiteCmd.ExecuteNonQuery();
+				
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Counters(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, identifier INTEGER, value TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+				
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Workflow(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, value TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+				
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Correl(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, provider TEXT, counter_name TEXT, instance_name TEXT, Correl TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+				
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS CounterIdentifier(id INTEGER PRIMARY KEY AUTOINCREMENT, server TEXT, provider TEXT, counter_name TEXT, instance_name TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+				
+				/*SQLiteCmd.CommandText = "CREATE INDEX IF NOT EXISTS index1 ON CounterIdentifier(server, provider, counter_name, instance_name);";
+				SQLiteCmd.ExecuteNonQuery();
+				
+				SQLiteCmd.CommandText = "CREATE INDEX IF NOT EXISTS index2 ON Counters(datetime, identifier, value);";
+				SQLiteCmd.ExecuteNonQuery();*/
+				
+			}
 		}
 		
 		public static void InsertSQLCounters(string Server, string DB)
 		{
-			List<List<string>> FormattedDS = new List<List<string>>();
+			var FormattedDS = new List<List<string>>();
 			System.DateTime StartDateTime;
 			System.DateTime StartDateTimeSecond;
 			
 			#region Выборка счетчиков из SQL, помещение их в DataSet'ы DSFirst, DSSecond
-			System.Data.SqlClient.SqlConnection SQLConn;
-			System.Data.SqlClient.SqlCommand SQLCmd;
-			SQLCmd = new System.Data.SqlClient.SqlCommand();
-			SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source=" + Server + ";Initial Catalog=" + DB + ";Integrated Security=SSPI;");
+			var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source=" + Server + ";Initial Catalog=" + DB + ";Integrated Security=SSPI;");
 			SQLConn.Open();
+			var SQLCmd = new System.Data.SqlClient.SqlCommand();
 			SQLCmd.Connection = SQLConn;
 			
 			//SQLCmd.CommandText = @"SELECT [counter_name],[instance_name],[cntr_value],[cntr_type] FROM [sqldiag].[sys].[dm_os_performance_counters] WHERE (cntr_type='65792' OR cntr_type='272696320') AND (object_name NOT LIKE 'SQLServer:Deprecated Features%')";
@@ -854,8 +840,8 @@ namespace PerfCounters2
 			StartDateTime = DateTime.Now;
 			SQLCmd.ExecuteNonQuery();
 			
-			System.Data.DataSet DSFirst = new DataSet();
-			System.Data.SqlClient.SqlDataAdapter AdapterFirst = new System.Data.SqlClient.SqlDataAdapter(SQLCmd.CommandText, SQLConn);
+			var DSFirst = new DataSet();
+			var AdapterFirst = new System.Data.SqlClient.SqlDataAdapter(SQLCmd.CommandText, SQLConn);
 			AdapterFirst.Fill(DSFirst);
 			
 			System.Threading.Thread.Sleep(1000);
@@ -863,7 +849,7 @@ namespace PerfCounters2
 			StartDateTimeSecond = DateTime.Now;
 			
 			System.Data.DataSet DSSecond = new DataSet();
-			System.Data.SqlClient.SqlDataAdapter AdapterSecond = new System.Data.SqlClient.SqlDataAdapter(SQLCmd.CommandText, SQLConn);
+			var AdapterSecond = new System.Data.SqlClient.SqlDataAdapter(SQLCmd.CommandText, SQLConn);
 			AdapterSecond.Fill(DSSecond);
 			SQLConn.Close();
 			#endregion
@@ -949,26 +935,22 @@ namespace PerfCounters2
 
 		public static void ReadDataToConsole(string dbFileName, string CommandText)
 		{
-			SQLiteConnection dbConn;
-			SQLiteCommand sqlCmd;
-			sqlCmd = new SQLiteCommand();
-			dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
-			dbConn.Open();
-			sqlCmd.Connection = dbConn;
 			
-			DataSet ds = new DataSet();
-			sqlCmd.CommandText = @CommandText;
+			var dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
+			dbConn.Open();
+			var sqlCmd = new SQLiteCommand(@CommandText,dbConn);
 			sqlCmd.ExecuteNonQuery();
+			DataSet ds = new DataSet();
 			SQLiteDataAdapter adapter = new SQLiteDataAdapter(sqlCmd.CommandText, dbConn);
 			adapter.Fill(ds);
 			
-			foreach (System.Data.DataTable table in ds.Tables) {
+			foreach (var table in ds.Tables) {
 				Console.WriteLine(table.TableName);
-				foreach (DataColumn column in table.Columns)
+				foreach (var column in table.Columns)
 					Console.WriteLine(column.ColumnName);
-				foreach (DataRow row in table.Rows) {
+				foreach (var row in table.Rows) {
 					var cells = row.ItemArray;
-					foreach (object cell in cells) {
+					foreach (var cell in cells) {
 						Console.WriteLine("" + cell + " ");
 					}
 					Console.WriteLine();
@@ -989,7 +971,7 @@ namespace PerfCounters2
 			#endregion
 			
 			#region Помещение счетчиков в Pipeline
-			List<Columns> Columns = new List<Columns>();
+			var Columns = new List<Columns>();
 			
 			foreach (var cnt in p1.Keys) {
 				string CounterName = cnt.ToString();

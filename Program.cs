@@ -26,13 +26,10 @@ namespace PERF_COUNTERS_CSHARP
 		{
 			var m_dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
 			m_dbConn.Open();
-            var m_sqlCmd = new SQLiteCommand();
-			m_sqlCmd.Connection = m_dbConn;
-			
+            var m_sqlCmd = new SQLiteCommand(CommandText,m_dbConn);
+			m_sqlCmd.ExecuteNonQuery();
 			var ds = new DataSet();
-		   	m_sqlCmd.CommandText = @CommandText;
-		   	m_sqlCmd.ExecuteNonQuery();
-		   	SQLiteDataAdapter adapter = new SQLiteDataAdapter(m_sqlCmd.CommandText, m_dbConn);
+		   	var adapter = new SQLiteDataAdapter(m_sqlCmd.CommandText, m_dbConn);
 		   	adapter.Fill(ds);
 		   	
 		   	foreach (System.Data.DataTable table in ds.Tables)
@@ -54,26 +51,24 @@ namespace PERF_COUNTERS_CSHARP
 		
 		
 		public static void CreateAndCheckSQLiteDB (string dbFileName)
-		{
-			var SQLiteCmd = new System.Data.SQLite.SQLiteCommand();
-						
+		{			
 			if (!System.IO.File.Exists(dbFileName))
 			{
 				System.Data.SQLite.SQLiteConnection.CreateFile(dbFileName);
 			}
 			
-			var SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
-			SQLiteConn.Open();
-			SQLiteCmd.Connection = SQLiteConn;
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Counters(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_name TEXT, instance_name TEXT, value TEXT, category TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Workflow(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, value TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Correl(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_name TEXT, instance_name TEXT, Correl TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS StatAnalit(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_type TEXT, diff TEXT);";
-			SQLiteCmd.ExecuteNonQuery();
-			SQLiteConn.Close();
+			using (var SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
+			{
+				SQLiteConn.Open();
+				var SQLiteCmd = new System.Data.SQLite.SQLiteCommand("CREATE TABLE IF NOT EXISTS Counters(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_name TEXT, instance_name TEXT, value TEXT, category TEXT);",SQLiteConn);
+				SQLiteCmd.ExecuteNonQuery();
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Workflow(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, value TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Correl(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_name TEXT, instance_name TEXT, Correl TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS StatAnalit(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_type TEXT, diff TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+			}
 		}
 	
 	
