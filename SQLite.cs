@@ -11,11 +11,72 @@ using System.Data.Common;
 //using Microsoft.Office.Interop.Excel;
 using System.Text.RegularExpressions;
 
-namespace PerfCounters3
+namespace PERF_COUNTERS_CSHARP
 {
 	class Program
 	{
-		public static void Main0(string[] args)
+		public static bool PrintResponce (string CommandText)
+		{
+			using (var m_dbConn = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;"))
+			{
+				try
+				{
+					m_dbConn.Open();
+				}
+				catch (SQLiteException ex)
+				{
+					Console.WriteLine("Error: "+ex.Message);
+					return false;
+				}
+				var m_sqlCmd = new SQLiteCommand(@CommandText,m_dbConn);
+				m_sqlCmd.ExecuteNonQuery();
+				var ds = new DataSet();
+				var adapter = new SQLiteDataAdapter(m_sqlCmd.CommandText, m_dbConn);
+				adapter.Fill(ds);
+				foreach (DataTable table in ds.Tables)
+				{
+					Console.WriteLine(table.TableName);
+					foreach (DataColumn column in table.Columns)
+						Console.WriteLine(column.ColumnName);
+					foreach (DataRow row in table.Rows)
+					{
+						var cells = row.ItemArray;
+						foreach (var cell in cells)
+						{
+							Console.WriteLine(""+cell+" ");
+						}
+						Console.WriteLine();
+					}
+				}
+			}
+			
+			return true;
+		}
+	
+	
+		public static void DBCheckAndCreate ()
+		{	
+			var  = new SQLite.SQLiteConnection();
+			if (!System.IO.File.Exists(GlobalConstant.DBNAME))
+			{
+				SQLiteConn.CreateFile(GlobalConstant.DBNAME);
+			}
+			
+			using (var SQLiteConn = new SQLite.SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;"))
+			{
+				SQLiteConn.Open();
+				var SQLiteCmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Counters(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_name TEXT, instance_name TEXT, value TEXT, category TEXT);",SQLiteConn);
+				SQLiteCmd.ExecuteNonQuery();
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Workflow(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, value TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS Correl(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_name TEXT, instance_name TEXT, Correl TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+				SQLiteCmd.CommandText = "CREATE TABLE IF NOT EXISTS StatAnalit(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_type TEXT, diff TEXT);";
+				SQLiteCmd.ExecuteNonQuery();
+			}
+		}
+	
+		public static void Main(string[] args)
 		{
 			var pcc = new PerformanceCounterCategory("Client Side Caching");   
 		   	var p1 = pcc.ReadCategory();

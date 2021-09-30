@@ -10,7 +10,8 @@
     <PackageReference Include="System.Data.SQLite" Version="1.0.115" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Test2.fs" />
+    <Compile Include="SQLite.cs" />
+    <Compile Include="Program.cs" />
   </ItemGroup>
 
 </Project>

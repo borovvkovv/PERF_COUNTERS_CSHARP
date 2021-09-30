@@ -17,7 +17,7 @@ namespace PERF_COUNTERS_CSHARP
 	
 	class Program
 	{
-		public static void CreateAndCheckSQLiteDB (string dbFileName)
+		public static void DBCheckAndCreate (string dbFileName)
 		{	
 			if (!System.IO.File.Exists(dbFileName))
 			{
@@ -34,7 +34,7 @@ namespace PERF_COUNTERS_CSHARP
 		
 		public static void Main(string[] args)
 		{
-			CreateAndCheckSQLiteDB("1.sqlite");
+			DBCheckAndCreate("1.sqlite");
 			
 		}
 	}

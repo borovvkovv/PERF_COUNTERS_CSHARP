@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
 
 
-namespace PERF_COUNTERS_SHARP
+namespace PERF_COUNTERS_CSHARP
 {
 	
 	class Values
@@ -35,7 +35,7 @@ namespace PERF_COUNTERS_SHARP
 		{
 			this.Server = Server;
 			this.Category = Category;
-			this.dbFileName = dbFileName;
+			this.DBNAMEFileName = dbFileName;
 		}
 	}
 	
@@ -130,7 +130,7 @@ namespace PERF_COUNTERS_SHARP
 		
 		public static void Consumer()
 		{
-			using (var SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=Sample.sqlite;Version=3;")) {
+			using (var SQLiteConn = new System.Data.SQLite.SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;")) {
 				SQLiteConn.Open();
 				while (!BC.IsCompleted) {
 					var Columns = new List<Columns>();
@@ -500,10 +500,10 @@ namespace PERF_COUNTERS_SHARP
 			}
 		}
 
-		public static void DeleteRows(string dbFileName)
+		public static void DeleteRows()
 		{
 			
-			using (var SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
+			using (var SQLiteConn = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;"))
 			{
 				SQLiteConn.Open();
 				var SQLiteCmd = new SQLiteCommand(@"DELETE FROM Counters",SQLiteConn);
@@ -513,11 +513,11 @@ namespace PERF_COUNTERS_SHARP
 			}
 		}
 		
-		public static void CorrelProcessing(string dbFileName)
+		public static void CorrelProcessing()
 		{
 			#region Выборка всех записей Workflow и помещение их в DataSet (DS id, date, value)
 			var SQLiteConn = new SQLiteConnection();
-			SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
+			SQLiteConn = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;");
 				SQLiteConn.Open();
 				var SQLiteCmd = new System.Data.SQLite.SQLiteCommand(@"SELECT * FROM Workflow",SQLiteConn);
 				SQLiteCmd.ExecuteNonQuery();
@@ -676,13 +676,13 @@ namespace PERF_COUNTERS_SHARP
 			Console.WriteLine("Готово");
 		}
 				
-		public static void StatAnalit(string dbFileName)
+		public static void StatAnalit()
 		{
 			List<Thread> LT = new List<Thread>();
 			BCBrief = new BlockingCollection<List<ColumnsBrief>>();
 			
 			#region Выборка всех записей Workflow,Counters и помещение их в List
-			SQLiteConnection SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
+			SQLiteConnection SQLiteConn = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;");
 			SQLiteConn.Open();
 			var SQLiteCmd = new SQLiteCommand(SQLiteConn);
 			
@@ -763,13 +763,13 @@ namespace PERF_COUNTERS_SHARP
 			
 		}
 		
-		public static void InsertWorkflow(string Server, string DB)
+		public static void InsertWorkflow(string Server)
 		{
 			System.DateTime StartDateTime;
 			
 			#region Выборка WF из SQL и помещение в DataSet (DS)
 			
-			using (var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source=" + Server + ";Initial Catalog=" + DB + ";Integrated Security=SSPI;"))
+			using (var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source=" + Server + ";Initial Catalog=" + GlobalConstant.DBNAME + ";Integrated Security=SSPI;"))
 			{
 				SQLConn.Open();
 				var SQLCmd = new System.Data.SqlClient.SqlCommand(@"SELECT COUNT(TaskID) FROM [DIRECTUM].[dbo].[SBWorkflowProcessing] with(nolock)",SQLConn);
@@ -791,13 +791,13 @@ namespace PERF_COUNTERS_SHARP
 			
 		}
 		
-		public static void CreateAndCheckSQLiteDB(string dbFileName)
+		public static void DBCheckAndCreate()
 		{
-			if (!System.IO.File.Exists(dbFileName)) {
-				SQLiteConnection.CreateFile(dbFileName);
+			if (!System.IO.File.Exists(GlobalConstant.DBNAME)) {
+				SQLiteConnection.CreateFile(GlobalConstant.DBNAME);
 			}
 			
-			using (var SQLiteConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;"))
+			using (var SQLiteConn = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;"))
 			{
 				SQLiteConn.Open();
 				var SQLiteCmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS StatAnalit(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_type TEXT, diff TEXT);",SQLiteConn);
@@ -824,14 +824,14 @@ namespace PERF_COUNTERS_SHARP
 			}
 		}
 		
-		public static void InsertSQLCounters(string Server, string DB)
+		public static void InsertSQLCounters(string Server)
 		{
 			var FormattedDS = new List<List<string>>();
 			System.DateTime StartDateTime;
 			System.DateTime StartDateTimeSecond;
 			
 			#region Выборка счетчиков из SQL, помещение их в DataSet'ы DSFirst, DSSecond
-			var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source=" + Server + ";Initial Catalog=" + DB + ";Integrated Security=SSPI;");
+			var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source=" + Server + ";Initial Catalog=" + GlobalConstant.DBNAME + ";Integrated Security=SSPI;");
 			SQLConn.Open();
 			var SQLCmd = new System.Data.SqlClient.SqlCommand();
 			SQLCmd.Connection = SQLConn;
@@ -933,33 +933,8 @@ namespace PERF_COUNTERS_SHARP
 			BC.Add(Columns);
 			#endregion
 		}
-
-		public static void ReadDataToConsole(string dbFileName, string CommandText)
-		{
-			
-			var dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
-			dbConn.Open();
-			var sqlCmd = new SQLiteCommand(@CommandText,dbConn);
-			sqlCmd.ExecuteNonQuery();
-			DataSet ds = new DataSet();
-			SQLiteDataAdapter adapter = new SQLiteDataAdapter(sqlCmd.CommandText, dbConn);
-			adapter.Fill(ds);
-			
-			foreach (var table in ds.Tables) {
-				Console.WriteLine(table.TableName);
-				foreach (var column in table.Columns)
-					Console.WriteLine(column.ColumnName);
-				foreach (var row in table.Rows) {
-					var cells = row.ItemArray;
-					foreach (var cell in cells) {
-						Console.WriteLine("" + cell + " ");
-					}
-					Console.WriteLine();
-				}
-			}
-		}
 		
-		static void InsertServerCounters(string Server, string Category, string dbFileName)
+		static void InsertServerCounters(string Server, string Category)
 		{
 			System.DateTime StartDateTime;
 
@@ -1007,22 +982,22 @@ namespace PERF_COUNTERS_SHARP
 			ThreadPool.SetMinThreads(WorkerThreads, CompletionThreads);*/
 			
 			
-			//ReadDataToConsole("Sample.sqlite", "DROP TABLE Correl");
-			//ReadDataToConsole("Sample.sqlite", "SELECT * FROM Workflow");
-			//CreateAndCheckSQLiteDB("Sample.sqlite");
+			//PrintResponce("Sample.sqlite", "DROP TABLE Correl");
+			//PrintResponce("Sample.sqlite", "SELECT * FROM Workflow");
+			//DBCheckAndCreate("Sample.sqlite");
 			
-			//ReadDataToConsole("Sample.sqlite", "SELECT DISTINCT * FROM Counters WHERE counter_name='table opens/sec'");
+			//PrintResponce("Sample.sqlite", "SELECT DISTINCT * FROM Counters WHERE counter_name='table opens/sec'");
 			
 			Stopwatch swTime = Stopwatch.StartNew();
 			//CorrelProcessing("Sample.sqlite");
 			//StatAnalit("Sample.sqlite");
 			var time = swTime.ElapsedMilliseconds;
 			Console.WriteLine("Time: "+time / 1000);
-			//ReadDataToConsole("Sample.sqlite", "SELECT * FROM Correl");
+			//PrintResponce("Sample.sqlite", "SELECT * FROM Correl");
 			//InsertSQLCounters("sng-drmdb-sql","directum","Sample.sqlite");
 			//CorrelProcessing("Sample.sqlite");
-			//ReadDataToConsole("Sample.sqlite", "SELECT server,provider,counter_name,instance_name,correl FROM Correl WHERE Server='sng-drmweb-01' ORDER BY correl");
-			ReadDataToConsole("Sample.sqlite", "SELECT   count(id) FROM statanalit");
+			//PrintResponce("Sample.sqlite", "SELECT server,provider,counter_name,instance_name,correl FROM Correl WHERE Server='sng-drmweb-01' ORDER BY correl");
+			PrintResponce("Sample.sqlite", "SELECT   count(id) FROM statanalit");
 			/*ThreadPool.QueueUserWorkItem(delegate(object state) {Consumer();});
 			for (int i=0; i<60; i++)
 			{

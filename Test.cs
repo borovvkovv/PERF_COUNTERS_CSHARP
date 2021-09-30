@@ -8,11 +8,11 @@ using System.IO;
 using System.Data.SqlClient;
 using System.Data.Common;
 
-namespace Test
+namespace PERF_COUNTERS_CSHARP
 {
 	class Program
 	{	
-		public static bool InsertSQLCounters(string Server, string DB, string dbFileName)
+		public static bool InsertSQLCounters(string Server, string dbFileName)
 		{
 			var FormattedDS = new List<List<string>>();
 			System.DateTime StartDateTime;
@@ -20,7 +20,7 @@ namespace Test
 			
 			#region Выборка счетчиков из SQL, помещение их в DataSet'ы DSFirst, DSSecond
 			
-			var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source="+Server+";Initial Catalog="+DB+";Integrated Security=SSPI;");
+			var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source="+Server+";Initial Catalog="+GlobalConstant.DBNAME+";Integrated Security=SSPI;");
 			try
 			{
 				SQLConn.Open();
@@ -93,11 +93,11 @@ namespace Test
 		}	*/
 		
 		
-		public static DataSet ReadDataToDS (string dbFileName, string CommandText)
+		public static DataSet ReadDataToDS (string CommandText)
 		{
 			
 
-			var m_dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
+			var m_dbConn = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;");
 			try
 			{
 				m_dbConn.Open();
@@ -113,46 +113,10 @@ namespace Test
 		   	adapter.Fill(ds);
 		   	return ds;
 		}
-		
-		public static bool ReadDataToConsole (string dbFileName, string CommandText)
+				
+		public static void PerfFormattedData ()
 		{
-			var m_dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
-			try
-			{
-				m_dbConn.Open();
-			}
-			catch (SQLiteException ex)
-			{
-				Console.WriteLine("Error: "+ex.Message);
-				return false;
-			}
-			var m_sqlCmd = new SQLiteCommand(@CommandText,m_dbConn);
-		   	m_sqlCmd.ExecuteNonQuery();
-			var ds = new DataSet();
-		   	var adapter = new SQLiteDataAdapter(m_sqlCmd.CommandText, m_dbConn);
-		   	adapter.Fill(ds);
-		   	
-		   	foreach (var table in ds.Tables)
-		   	{
-		   		Console.WriteLine(table.TableName);
-			   	foreach (var column in table.Columns)
-			   		Console.WriteLine(column.ColumnName);
-		   		foreach (var row in table.Rows)
-		   		{
-		   			var cells = row.ItemArray;
-		   			foreach (var cell in cells)
-		   			{
-		   				Console.WriteLine(""+cell+" ");
-		   			}
-		   			Console.WriteLine();
-		   		}
-		   	}
-			return true;
-		}
-		
-		public static void PerfFormattedData (string dbFileName)
-		{
-			var DS = ReadDataToDS("Sample.sqlite",@"SELECT * FROM Workflow");
+			var DS = ReadDataToDS(@"SELECT * FROM Workflow");
 			
 			var FormattedDS_2 = new List<List<string>>();
 			
