@@ -55,14 +55,13 @@ namespace PERF_COUNTERS_CSHARP
 	
 	
 		public static void DBCheckAndCreate ()
-		{	
-			var  = new SQLite.SQLiteConnection();
+		{
 			if (!System.IO.File.Exists(GlobalConstant.DBNAME))
 			{
-				SQLiteConn.CreateFile(GlobalConstant.DBNAME);
+				SQLiteConnection.CreateFile(GlobalConstant.DBNAME);
 			}
 			
-			using (var SQLiteConn = new SQLite.SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;"))
+			using (var SQLiteConn = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;"))
 			{
 				SQLiteConn.Open();
 				var SQLiteCmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS Counters(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT, server TEXT, counter_name TEXT, instance_name TEXT, value TEXT, category TEXT);",SQLiteConn);
@@ -77,8 +76,8 @@ namespace PERF_COUNTERS_CSHARP
 		}
 	
 		public static void Main(string[] args)
-		{
-			var pcc = new PerformanceCounterCategory("Client Side Caching");   
+		{ 
+			var pcc = new PerformanceCounterCategory("Memory");   
 		   	var p1 = pcc.ReadCategory();
 		   	Thread.Sleep(1000);
 		   	var p2 = pcc.ReadCategory();
