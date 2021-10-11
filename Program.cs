@@ -24,18 +24,5 @@ namespace PERF_COUNTERS_CSHARP
 		public float value {get; set;}//System.Single = float в C#
 		public DateTime time {get; set;}
 	}
-	
-	/*class Program
-	{
-				
-		
-		
-		public static void Main(string[] args)
-		{
-			DBCheckAndCreate("1.sqlite");
-			
-		}
-	}*/
 }
- 
- 
+

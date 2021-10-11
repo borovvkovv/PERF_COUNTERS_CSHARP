@@ -12,79 +12,13 @@ namespace PERF_COUNTERS_CSHARP
 {
 	class Program
 	{	
-		public static bool InsertSQLCounters(string Server, string dbFileName)
-		{
-			var FormattedDS = new List<List<string>>();
-			System.DateTime StartDateTime;
-			System.DateTime EndDateTime;
-			
-			#region Выборка счетчиков из SQL, помещение их в DataSet'ы DSFirst, DSSecond
-			
-			var SQLConn = new System.Data.SqlClient.SqlConnection(@"Data Source="+Server+";Initial Catalog="+GlobalConstant.DBNAME+";Integrated Security=SSPI;");
-			try
-			{
-				SQLConn.Open();
-			}
-			catch (System.Data.SqlClient.SqlException ex)
-			{
-				Console.WriteLine("Error: "+ex.Message);
-				return false;
-			}
-			var SQLCmd = new System.Data.SqlClient.SqlCommand(@"SELECT [counter_name],[instance_name],[cntr_value],[cntr_type] FROM [sqldiag].[sys].[dm_os_performance_counters]",SQLConn);
-		   	StartDateTime = DateTime.Now;
-		   	SQLCmd.ExecuteNonQuery();
-		   	
-		   	var DSFirst = new DataSet();
-		   	var AdapterFirst = new System.Data.SqlClient.SqlDataAdapter(SQLCmd.CommandText, SQLConn);
-		   	AdapterFirst.Fill(DSFirst);
-		   	
-		   	System.Threading.Thread.Sleep(1000);
-		   	SQLCmd.ExecuteNonQuery();
-		   	EndDateTime = DateTime.Now;
-		   	
-		   	var DSSecond = new DataSet();
-		   	var AdapterSecond = new System.Data.SqlClient.SqlDataAdapter(SQLCmd.CommandText, SQLConn);
-		   	AdapterSecond.Fill(DSSecond);
-		   	SQLConn.Close();
-		   	#endregion
-		  
-			foreach (var row in DSSecond.Tables[0].Rows)
-	   		{
-	   			var cells = row.ItemArray;
-	   			switch (cells[3].ToString())
-	   				{
-	   					case "65792":
-	   						FormattedDS.Add(new List<string> {EndDateTime.ToString(),Server, cells[0].ToString(), cells[1].ToString(), cells[2].ToString()});
-	   						break;
-	   					case "272696320":
-	   						FormattedDS.Add(new List<string> {EndDateTime.ToString(),Server, cells[0].ToString(), cells[1].ToString(), cells[2].ToString()});
-	   						break;
-	   					case "1073874176":
-	   						
-	   						break;
-	   					case "272696576":
-	   						break;
-	   					case "1073939712":
-	   						break;
-	   					case "537003264":
-	   						break;
-	   					default:
-	   						Console.WriteLine("Error!!! Unknown SQL counter type");
-	   						break;
-	   				}
-	   		}
-		   	Console.WriteLine("konec");
-			return true;
-		}
-
-		
-		/*public static int FindCount (string name, string inst, DataSet DS) // date, server, name, inst, value
+		/*public static int FindCount (string name, string instance, DataSet DS) // date, server, name, instance, value
 		{
 			Console.WriteLine(DS.Tables[0].TableName);
 	   		foreach (DataRow row in table.Rows)
 	   		{
 	   			var cells = row.ItemArray;
-   				if (cells[0].ToString() == name && cells[1].ToString() == inst)
+   				if (cells[0].ToString() == name && cells[1].ToString() == instance)
 				    {
    					return Convert.ToInt32(cells[2]);
 				    }
@@ -97,21 +31,21 @@ namespace PERF_COUNTERS_CSHARP
 		{
 			
 
-			var m_dbConn = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;");
+			var dbConnect = new SQLiteConnection("Data Source=" + GlobalConstant.DBNAME + ";Version=3;");
 			try
 			{
-				m_dbConn.Open();
+				dbConnect.Open();
 			}
 			catch (SQLiteException ex)
 			{
 				Console.WriteLine("Error: "+ex.Message);
 			}
-			var m_sqlCmd = new SQLiteCommand(@CommandText,m_dbConn);
-		   	m_sqlCmd.ExecuteNonQuery();
-			var ds = new DataSet();
-		   	var adapter = new SQLiteDataAdapter(m_sqlCmd.CommandText, m_dbConn);
-		   	adapter.Fill(ds);
-		   	return ds;
+			var sqlCmd = new SQLiteCommand(@CommandText,dbConnect);
+		   	sqlCmd.ExecuteNonQuery();
+			var DS = new DataSet();
+		   	var adapter = new SQLiteDataAdapter(sqlCmd.CommandText, dbConnect);
+		   	adapter.Fill(DS);
+		   	return DS;
 		}
 				
 		public static void PerfFormattedData ()
@@ -124,11 +58,11 @@ namespace PERF_COUNTERS_CSHARP
 		   		{
 		   			var cells = row.ItemArray;
 		   			
-		   			DateTime WFDateTime = Convert.ToDateTime(cells[1]);	//время выборки очереди WF
-		   			DateTime RangeForWFDateTime = WFDateTime.AddMinutes(4);
-		   			//Console.WriteLine(WFDateTime);
+		   			DateTime wfDateTime = Convert.ToDateTime(cells[1]);	//время выборки очереди WF
+		   			DateTime RangeForWFDateTime = wfDateTime.AddMinutes(4);
+		   			//Console.WriteLine(wfDateTime);
 		   			//Console.WriteLine(RangeForWFDateTime);
-		   			var DS_2 = ReadDataToDS("Sample.sqlite", "SELECT * FROM Counters WHERE Server='sng-drmdb-sql' AND Date>='"+WFDateTime+"' AND Date<='"+RangeForWFDateTime+"'");
+		   			var DS_2 = ReadDataToDS("Sample.sqlite", "SELECT * FROM Counters WHERE server='sng-drmdb-sql' AND Date>='"+wfDateTime+"' AND Date<='"+RangeForWFDateTime+"'");
 		   			List<List<string>> ListDS = new List<List<string>>();
 		   			foreach (var row2 in DS_2.Tables[0].Rows)
 		   			{
@@ -148,10 +82,10 @@ namespace PERF_COUNTERS_CSHARP
 		   						break;
 		   					case "1073874176":
 		   						/*if (IsItFirstSelection())
-		   						var A2 = FindCount(WFDateTime, RangeForWFDateTime, ListDS[0][3].ToString(), ListDS[0][4].ToString(), 2)[4];
-		   						var A1 = FindCount(WFDateTime, RangeForWFDateTime, ListDS[0][3].ToString(), ListDS[0][4].ToString(), 1)[4];
-		   						var B2 = FindCount(WFDateTime, RangeForWFDateTime, ListDS[0][3].ToString().Replace("/sec","Base").Replace("(ms)","Base"), ListDS[0][4].ToString(), 2)[4];
-		   						var B1 = FindCount(WFDateTime, RangeForWFDateTime, ListDS[0][3].ToString().Replace("/sec","Base").Replace("(ms)","Base"), ListDS[0][4].ToString(), 1)[4];
+		   						var A2 = FindCount(wfDateTime, RangeForWFDateTime, ListDS[0][3].ToString(), ListDS[0][4].ToString(), 2)[4];
+		   						var a1 = FindCount(wfDateTime, RangeForWFDateTime, ListDS[0][3].ToString(), ListDS[0][4].ToString(), 1)[4];
+		   						var B2 = FindCount(wfDateTime, RangeForWFDateTime, ListDS[0][3].ToString().Replace("/sec","Base").Replace("(ms)","Base"), ListDS[0][4].ToString(), 2)[4];
+		   						var b1 = FindCount(wfDateTime, RangeForWFDateTime, ListDS[0][3].ToString().Replace("/sec","Base").Replace("(ms)","Base"), ListDS[0][4].ToString(), 1)[4];
 		   						FormattedDS_2.Add(new List<string> {ListDS[0][1].ToString(),ListDS[0][2].ToString(),ListDS[0][3].ToString(),ListDS[0][4].ToString(),});*/
 		   						break;
 		   					case "272696576":
